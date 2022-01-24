@@ -1,9 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.findMinMaxBatchSize = exports.findUnavailableBatch = exports.createBatchTable = void 0;
 var data_1 = require("./data");
 var produceOrder = function (products, batchSizes, productBatchSizes, batchQuantities, useMax) {
     //1. create Batch Table
-    var batchTable = createBatchTable(batchSizes, productBatchSizes, batchQuantities);
+    var batchTable = (0, exports.createBatchTable)(batchSizes, productBatchSizes, batchQuantities);
+    console.log(batchTable);
     //2. create orders
     return createOrders(products, batchTable, useMax);
 };
@@ -29,7 +31,7 @@ var createOrders = function (products, batchTable, useMax) {
         };
         orders.push(order);
     });
-    console.log(orders);
+    //console.log(orders);
     return orders;
 };
 var createBatchTable = function (batchSizes, productBatchSizes, batchQuantities) {
@@ -41,10 +43,10 @@ var createBatchTable = function (batchSizes, productBatchSizes, batchQuantities)
         var batchInformation = {};
         if (batchFound) {
             batchInformation.min = batchTable[productCode]
-                ? findMinMaxBatchSize(false, batchFound, batchTable[productCode].min)
+                ? (0, exports.findMinMaxBatchSize)(false, batchFound, batchTable[productCode].min)
                 : batchFound;
             batchInformation.max = batchTable[productCode]
-                ? findMinMaxBatchSize(true, batchFound, batchTable[productCode].max)
+                ? (0, exports.findMinMaxBatchSize)(true, batchFound, batchTable[productCode].max)
                 : batchFound;
             batchInformation.batchQuantiy = (_a = batchQuantities.find(function (quantity) { return quantity.productCode === productCode; })) === null || _a === void 0 ? void 0 : _a.quantity;
         }
@@ -52,21 +54,24 @@ var createBatchTable = function (batchSizes, productBatchSizes, batchQuantities)
             return;
         batchTable[productCode] = batchInformation;
     });
-    createUnavailableBatchSize(batchTable);
-    return batchTable;
-};
-var createUnavailableBatchSize = function (batchTable) {
-    var productCodes = data_1.productBatchSizes.map(function (batch) { return batch.productCode; });
-    var unavailableBatchSize = data_1.products.filter(function (product) { return !productCodes.includes(product.code); });
-    if (unavailableBatchSize.length > 0) {
-        unavailableBatchSize.forEach(function (batchSize) {
+    var unavailableBatch = (0, exports.findUnavailableBatch)(productBatchSizes, batchQuantities);
+    if (unavailableBatch.length > 0) {
+        unavailableBatch.forEach(function (batch) {
             var _a;
-            batchTable[batchSize.code] = {
-                batchQuantiy: (_a = data_1.batchQuantities.find(function (quantity) { return quantity.productCode === batchSize.code; })) === null || _a === void 0 ? void 0 : _a.quantity,
+            batchTable[batch.productCode] = {
+                batchQuantiy: (_a = batchQuantities.find(function (quantity) { return quantity.productCode === batch.productCode; })) === null || _a === void 0 ? void 0 : _a.quantity,
             };
         });
     }
+    return batchTable;
 };
+exports.createBatchTable = createBatchTable;
+var findUnavailableBatch = function (productBatchSizes, batchQuantities) {
+    var productCodes = productBatchSizes.map(function (batch) { return batch.productCode; });
+    var unavailableBatch = batchQuantities.filter(function (batch) { return !productCodes.includes(batch.productCode); });
+    return unavailableBatch;
+};
+exports.findUnavailableBatch = findUnavailableBatch;
 var findMinMaxBatchSize = function (isMax, currentBatchSize, previousBatchSize) {
     switch (isMax) {
         case true:
@@ -81,4 +86,5 @@ var findMinMaxBatchSize = function (isMax, currentBatchSize, previousBatchSize) 
             return;
     }
 };
+exports.findMinMaxBatchSize = findMinMaxBatchSize;
 produceOrder(data_1.products, data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities, false);

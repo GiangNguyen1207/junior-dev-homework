@@ -27,6 +27,7 @@ const produceOrder = (
     productBatchSizes,
     batchQuantities
   );
+  //console.log(batchTable);
 
   //2. create orders
   return createOrders(products, batchTable, useMax);
@@ -60,11 +61,11 @@ const createOrders = (
     };
     orders.push(order);
   });
-  console.log(orders);
+  //console.log(orders);
   return orders;
 };
 
-const createBatchTable = (
+export const createBatchTable = (
   batchSizes: BatchSize[],
   productBatchSizes: ProductBatchSize[],
   batchQuantities: BatchQuantity[]
@@ -93,28 +94,35 @@ const createBatchTable = (
     batchTable[productCode] = batchInformation;
   });
 
-  createUnavailableBatchSize(batchTable);
-  return batchTable;
-};
-
-const createUnavailableBatchSize = (batchTable: BatchTable) => {
-  const productCodes = productBatchSizes.map((batch) => batch.productCode);
-  const unavailableBatchSize = products.filter(
-    (product) => !productCodes.includes(product.code)
+  const unavailableBatch = findUnavailableBatch(
+    productBatchSizes,
+    batchQuantities
   );
-
-  if (unavailableBatchSize.length > 0) {
-    unavailableBatchSize.forEach((batchSize) => {
-      batchTable[batchSize.code] = {
+  if (unavailableBatch.length > 0) {
+    unavailableBatch.forEach((batch) => {
+      batchTable[batch.productCode] = {
         batchQuantiy: batchQuantities.find(
-          (quantity) => quantity.productCode === batchSize.code
+          (quantity) => quantity.productCode === batch.productCode
         )?.quantity,
       };
     });
   }
+
+  return batchTable;
 };
 
-const findMinMaxBatchSize = (
+export const findUnavailableBatch = (
+  productBatchSizes: ProductBatchSize[],
+  batchQuantities: BatchQuantity[]
+) => {
+  const productCodes = productBatchSizes.map((batch) => batch.productCode);
+  const unavailableBatch = batchQuantities.filter(
+    (batch) => !productCodes.includes(batch.productCode)
+  );
+  return unavailableBatch;
+};
+
+export const findMinMaxBatchSize = (
   isMax: boolean,
   currentBatchSize: BatchSize,
   previousBatchSize?: BatchSize
