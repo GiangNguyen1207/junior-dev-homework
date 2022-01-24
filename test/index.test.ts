@@ -2,13 +2,9 @@ import {
   createBatchTable,
   findMinMaxBatchSize,
   findUnavailableBatch,
+  validateBatchInformation,
 } from '../src';
-import {
-  batchQuantities,
-  productBatchSizes,
-  batchSizes,
-  products,
-} from '../src/data';
+import { batchQuantities, productBatchSizes, batchSizes } from '../src/data';
 import { BatchQuantity, BatchSize, ProductBatchSize } from '../src/type';
 import { expectedBatchTable } from './testData';
 
@@ -55,23 +51,6 @@ describe('find min and max of batch size', () => {
       size: 10,
     };
     const returnedBatch = findMinMaxBatchSize(false, currentBatch);
-    expect(returnedBatch).toEqual(undefined);
-  });
-
-  test('should not return a negative number for size', () => {
-    const currentBatch: BatchSize = {
-      code: 'A1',
-      size: -10,
-    };
-    const previousBatch: BatchSize = {
-      code: 'A2',
-      size: -20,
-    };
-    const returnedBatch = findMinMaxBatchSize(
-      true,
-      currentBatch,
-      previousBatch
-    );
     expect(returnedBatch).toEqual(undefined);
   });
 });
@@ -166,6 +145,88 @@ describe('find a product with unavailable batch', () => {
   });
 });
 
+describe('validate batch information', () => {
+  test('should return positive min, max and number of batches', () => {
+    const batch1: BatchSize = {
+      code: 'A1',
+      size: 10,
+    };
+    const batch2: BatchSize = {
+      code: 'A2',
+      size: 20,
+    };
+    const returnedBatchInformation = validateBatchInformation(
+      batch1,
+      batch2,
+      100
+    );
+    expect(returnedBatchInformation).toEqual(
+      expect.objectContaining({
+        min: batch1,
+        max: batch2,
+        batchQuantity: 100,
+      })
+    );
+  });
+
+  test('should not return a negative number for size', () => {
+    const batch1: BatchSize = {
+      code: 'A1',
+      size: -10,
+    };
+    const batch2: BatchSize = {
+      code: 'A2',
+      size: 20,
+    };
+    const returnedBatchInformation = validateBatchInformation(
+      batch1,
+      batch2,
+      100
+    );
+    expect(returnedBatchInformation).toEqual(
+      expect.objectContaining({
+        min: undefined,
+        max: batch2,
+        batchQuantity: 100,
+      })
+    );
+  });
+
+  test('should not return a negative number for size', () => {
+    const batch1: BatchSize = {
+      code: 'A1',
+      size: -10,
+    };
+    const batch2: BatchSize = {
+      code: 'A2',
+      size: -20,
+    };
+    const returnedBatchInformation = validateBatchInformation(
+      batch2,
+      batch1,
+      -20
+    );
+    expect(returnedBatchInformation).toEqual(
+      expect.objectContaining({
+        min: undefined,
+        max: undefined,
+        batchQuantity: undefined,
+      })
+    );
+  });
+
+  test('should return undefined when there is no parameter given', () => {
+    const returnedBatchInformation = validateBatchInformation();
+    expect(returnedBatchInformation).toEqual(
+      expect.objectContaining({
+        min: undefined,
+        max: undefined,
+        batchQuantity: undefined,
+      })
+    );
+  });
+});
+
 describe('create batch table', () => {
   test('create batch table with enough information', () => {
     const returnedBatchTable = createBatchTable(
@@ -224,7 +285,7 @@ describe('create batch table', () => {
       productBatchSizes,
       batchQuantities
     );
-    expect(returnedBatchTable['P2'].batchQuantiy).toEqual(undefined);
+    expect(returnedBatchTable['P2'].batchQuantity).toEqual(undefined);
   });
 
   test('should add more products to batch table', () => {
@@ -273,8 +334,8 @@ describe('create batch table', () => {
     );
     expect(returnedBatchTable).toHaveProperty('P3');
     expect(returnedBatchTable).toHaveProperty('P4');
-    expect(returnedBatchTable['P3'].batchQuantiy).toEqual(300);
-    expect(returnedBatchTable['P4'].batchQuantiy).toEqual(400);
+    expect(returnedBatchTable['P3'].batchQuantity).toEqual(300);
+    expect(returnedBatchTable['P4'].batchQuantity).toEqual(400);
   });
 
   test('should not add more products to batch table', () => {

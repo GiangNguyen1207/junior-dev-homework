@@ -22,7 +22,7 @@ export type BatchQuantity = {
 export type BatchInformation = {
   min?: BatchSize;
   max?: BatchSize;
-  batchQuantiy?: number;
+  batchQuantity?: number;
 };
 
 export type BatchTable = {

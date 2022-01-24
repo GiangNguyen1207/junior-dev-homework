@@ -10,7 +10,7 @@ export const expectedBatchTable: BatchTable = {
       code: 'BS6',
       size: 20,
     },
-    batchQuantiy: 20,
+    batchQuantity: 20,
   },
   P2: {
     min: {
@@ -21,7 +21,7 @@ export const expectedBatchTable: BatchTable = {
       code: 'BS3',
       size: 40,
     },
-    batchQuantiy: 500,
+    batchQuantity: 500,
   },
   P3: {
     min: {
@@ -32,10 +32,10 @@ export const expectedBatchTable: BatchTable = {
       code: 'BS5',
       size: 100,
     },
-    batchQuantiy: 40,
+    batchQuantity: 40,
   },
   P4: {
-    batchQuantiy: 234,
+    batchQuantity: 234,
   },
   P5: {
     min: {
@@ -46,6 +46,6 @@ export const expectedBatchTable: BatchTable = {
       code: 'BS7',
       size: 50,
     },
-    batchQuantiy: undefined,
+    batchQuantity: undefined,
   },
 };

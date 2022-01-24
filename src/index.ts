@@ -56,7 +56,7 @@ const createOrders = (
         (useMax
           ? batchTable[product.code].max?.size
           : batchTable[product.code].min?.size) || defaultBatchSize.size,
-      numberOfBatches: batchTable[product.code].batchQuantiy ?? 1,
+      numberOfBatches: batchTable[product.code].batchQuantity ?? 1,
       price: product.price,
     };
     orders.push(order);
@@ -77,18 +77,19 @@ export const createBatchTable = (
     const batchFound = batchSizes.find(
       (batch) => batch.code === productBatchSize.batchSizeCode
     );
-    const batchInformation: BatchInformation = {};
+    let batchInformation: BatchInformation = {};
 
     if (batchFound) {
-      batchInformation.min = batchTable[productCode]
+      const min = batchTable[productCode]
         ? findMinMaxBatchSize(false, batchFound, batchTable[productCode].min)
         : batchFound;
-      batchInformation.max = batchTable[productCode]
+      const max = batchTable[productCode]
         ? findMinMaxBatchSize(true, batchFound, batchTable[productCode].max)
         : batchFound;
-      batchInformation.batchQuantiy = batchQuantities.find(
+      const batchQuantity = batchQuantities.find(
         (quantity) => quantity.productCode === productCode
       )?.quantity;
+      batchInformation = validateBatchInformation(min, max, batchQuantity);
     } else return;
 
     batchTable[productCode] = batchInformation;
@@ -101,7 +102,7 @@ export const createBatchTable = (
   if (unavailableBatch.length > 0) {
     unavailableBatch.forEach((batch) => {
       batchTable[batch.productCode] = {
-        batchQuantiy: batchQuantities.find(
+        batchQuantity: batchQuantities.find(
           (quantity) => quantity.productCode === batch.productCode
         )?.quantity,
       };
@@ -109,6 +110,19 @@ export const createBatchTable = (
   }
 
   return batchTable;
+};
+
+export const validateBatchInformation = (
+  min?: BatchSize,
+  max?: BatchSize,
+  batchQuantity?: number
+): BatchInformation => {
+  return {
+    min: min && min.size > 0 ? min : undefined,
+    max: max && max.size > 0 ? max : undefined,
+    batchQuantity:
+      batchQuantity && batchQuantity > 0 ? batchQuantity : undefined,
+  };
 };
 
 export const findUnavailableBatch = (
