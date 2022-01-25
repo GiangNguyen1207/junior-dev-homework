@@ -1,6 +1,6 @@
 import { BatchTable } from '../src/type';
 
-export const expectedBatchTable: BatchTable = {
+export const mockedBatchTable: BatchTable = {
   P1: {
     min: {
       code: 'BS6',

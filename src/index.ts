@@ -33,7 +33,7 @@ const produceOrder = (
   return createOrders(products, batchTable, useMax);
 };
 
-const createOrders = (
+export const createOrders = (
   products: Product[],
   batchTable: BatchTable,
   useMax: boolean
@@ -44,7 +44,6 @@ const createOrders = (
       code: `BS_GENERATED_${product.code}`,
       size: 1,
     };
-
     const order: Order = {
       productCode: product.code,
       productName: product.name,
@@ -79,28 +78,31 @@ export const createBatchTable = (
     );
     let batchInformation: BatchInformation = {};
 
+    const quantity = batchQuantities.find(
+      (quantity) => quantity.productCode === productCode
+    )?.quantity;
+
     if (batchFound) {
-      const min = batchTable[productCode]
-        ? findMinMaxBatchSize(false, batchFound, batchTable[productCode].min)
-        : batchFound;
-      const max = batchTable[productCode]
-        ? findMinMaxBatchSize(true, batchFound, batchTable[productCode].max)
-        : batchFound;
-      const batchQuantity = batchQuantities.find(
-        (quantity) => quantity.productCode === productCode
-      )?.quantity;
-      batchInformation = validateBatchInformation(min, max, batchQuantity);
+      if (batchFound.size > 0) {
+        batchInformation.min = batchTable[productCode]
+          ? findMinMaxBatchSize(false, batchFound, batchTable[productCode].min)
+          : batchFound;
+        batchInformation.max = batchTable[productCode]
+          ? findMinMaxBatchSize(true, batchFound, batchTable[productCode].max)
+          : batchFound;
+        batchInformation.batchQuantity =
+          quantity && quantity > 0 ? quantity : undefined;
+      } else return;
     } else return;
 
     batchTable[productCode] = batchInformation;
   });
 
-  const unavailableBatch = findUnavailableBatch(
-    productBatchSizes,
-    batchQuantities
+  const unavailableBatches = batchQuantities.filter(
+    (batch) => !Object.keys(batchTable).includes(batch.productCode)
   );
-  if (unavailableBatch.length > 0) {
-    unavailableBatch.forEach((batch) => {
+  if (unavailableBatches.length > 0) {
+    unavailableBatches.forEach((batch) => {
       batchTable[batch.productCode] = {
         batchQuantity: batchQuantities.find(
           (quantity) => quantity.productCode === batch.productCode
@@ -110,30 +112,6 @@ export const createBatchTable = (
   }
 
   return batchTable;
-};
-
-export const validateBatchInformation = (
-  min?: BatchSize,
-  max?: BatchSize,
-  batchQuantity?: number
-): BatchInformation => {
-  return {
-    min: min && min.size > 0 ? min : undefined,
-    max: max && max.size > 0 ? max : undefined,
-    batchQuantity:
-      batchQuantity && batchQuantity > 0 ? batchQuantity : undefined,
-  };
-};
-
-export const findUnavailableBatch = (
-  productBatchSizes: ProductBatchSize[],
-  batchQuantities: BatchQuantity[]
-) => {
-  const productCodes = productBatchSizes.map((batch) => batch.productCode);
-  const unavailableBatch = batchQuantities.filter(
-    (batch) => !productCodes.includes(batch.productCode)
-  );
-  return unavailableBatch;
 };
 
 export const findMinMaxBatchSize = (
