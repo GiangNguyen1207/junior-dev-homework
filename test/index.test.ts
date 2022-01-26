@@ -1,10 +1,10 @@
-import { createBatchTable, createOrders, findMinMaxBatchSize } from '../src';
 import {
-  batchQuantities,
-  productBatchSizes,
-  batchSizes,
-  products,
-} from '../src/data';
+  createBatchTable,
+  createOrders,
+  findBatchQuantity,
+  findMinMaxBatchSize,
+  produceOrder,
+} from '../src';
 import {
   BatchQuantity,
   BatchSize,
@@ -12,7 +12,15 @@ import {
   Product,
   ProductBatchSize,
 } from '../src/type';
-import { mockedBatchTable } from './testData';
+import {
+  mockedBatchTable,
+  products,
+  batchSizes,
+  productBatchSizes,
+  batchQuantities,
+  mockedOrderUseMax,
+  mockedOrderUseMin,
+} from './testData';
 
 describe('find min and max of batch size', () => {
   test('should return the smaller batch size', () => {
@@ -58,6 +66,41 @@ describe('find min and max of batch size', () => {
     };
     const returnedBatch = findMinMaxBatchSize(false, currentBatch);
     expect(returnedBatch).toEqual(undefined);
+  });
+});
+
+describe('find number of batches', () => {
+  test('should return correct number of batchs', () => {
+    const batchQuantities: BatchQuantity[] = [
+      {
+        productCode: 'P1',
+        quantity: 100,
+      },
+    ];
+    const numberOfBatch = findBatchQuantity(batchQuantities, 'P1');
+    expect(numberOfBatch).toEqual(100);
+  });
+
+  test('should return undefined when number of batch < 0', () => {
+    const batchQuantities: BatchQuantity[] = [
+      {
+        productCode: 'P1',
+        quantity: -100,
+      },
+    ];
+    const numberOfBatch = findBatchQuantity(batchQuantities, 'P1');
+    expect(numberOfBatch).toEqual(undefined);
+  });
+
+  test('should return undefined when there is no batch found', () => {
+    const batchQuantities: BatchQuantity[] = [
+      {
+        productCode: 'P1',
+        quantity: 100,
+      },
+    ];
+    const numberOfBatch = findBatchQuantity(batchQuantities, 'P2');
+    expect(numberOfBatch).toEqual(undefined);
   });
 });
 
@@ -288,7 +331,77 @@ describe('create batch table', () => {
     expect(returnedBatchTable['P2'].batchQuantity).toEqual(undefined);
   });
 
-  test('should return undefined when the number of batch < 0', () => {});
+  test('should return undefined when the number of batch < 0', () => {
+    const productBatchSizes: ProductBatchSize[] = [
+      {
+        productCode: 'P1',
+        batchSizeCode: 'A1',
+      },
+      {
+        productCode: 'P2',
+        batchSizeCode: 'A2',
+      },
+    ];
+    const batchSizes: BatchSize[] = [
+      {
+        code: 'A1',
+        size: 10,
+      },
+      {
+        code: 'A2',
+        size: 20,
+      },
+    ];
+    const batchQuantities: BatchQuantity[] = [
+      {
+        productCode: 'P1',
+        quantity: 100,
+      },
+      {
+        productCode: 'P2',
+        quantity: -200,
+      },
+    ];
+    const returnedBatchTable = createBatchTable(
+      batchSizes,
+      productBatchSizes,
+      batchQuantities
+    );
+    expect(returnedBatchTable['P1'].batchQuantity).toEqual(100);
+    expect(returnedBatchTable['P2'].batchQuantity).toEqual(undefined);
+  });
+
+  test('should return undefined when the batch is not in product batch sizes and the number of batch < 0 a', () => {
+    const productBatchSizes: ProductBatchSize[] = [
+      {
+        productCode: 'P1',
+        batchSizeCode: 'A1',
+      },
+    ];
+    const batchSizes: BatchSize[] = [
+      {
+        code: 'A1',
+        size: 10,
+      },
+    ];
+    const batchQuantities: BatchQuantity[] = [
+      {
+        productCode: 'P1',
+        quantity: 100,
+      },
+      {
+        productCode: 'P2',
+        quantity: -200,
+      },
+    ];
+    const returnedBatchTable = createBatchTable(
+      batchSizes,
+      productBatchSizes,
+      batchQuantities
+    );
+    expect(returnedBatchTable['P1'].batchQuantity).toEqual(100);
+    expect(returnedBatchTable['P2'].batchQuantity).toEqual(undefined);
+  });
 
   test('should add more products to batch table', () => {
     const batchSizes: BatchSize[] = [
@@ -415,6 +528,7 @@ describe('create orders', () => {
     expect(orders[2]).toHaveProperty('batchSizeCode', 'BS5');
     expect(orders[2]).toHaveProperty('batchSize', 100);
   });
+
   test('should take the value from column min when useMax is false', () => {
     const orders = createOrders(products, mockedBatchTable, false);
     expect(orders[1]).toHaveProperty('batchSizeCode', 'BS1');
@@ -422,6 +536,7 @@ describe('create orders', () => {
     expect(orders[2]).toHaveProperty('batchSizeCode', 'BS4');
     expect(orders[2]).toHaveProperty('batchSize', 50);
   });
+
   test('should return the default batch code/batch size when there is no batch code from batch table and useMax is true', () => {
     const products: Product[] = [
       {
@@ -457,6 +572,7 @@ describe('create orders', () => {
     expect(orders[0]).toHaveProperty('batchSizeCode', 'A2');
     expect(orders[0]).toHaveProperty('batchSize', 20);
   });
+
   test('should return the default batch code/batch size when there is no batch size from batch table and useMax is false', () => {
     const products: Product[] = [
       {
@@ -492,6 +608,7 @@ describe('create orders', () => {
     expect(orders[0]).toHaveProperty('batchSizeCode', 'A1');
     expect(orders[0]).toHaveProperty('batchSize', 10);
   });
+
   test('should return 1 when number of batches from batch table is undefined', () => {
     const products: Product[] = [
       {
@@ -534,6 +651,25 @@ describe('create orders', () => {
 });
 
 describe('produce orders', () => {
-  test('should return right orders when useMax is true', () => {});
-  test('should return right orders when useMax is false', () => {});
+  test('should return right orders when useMax is true', () => {
+    const orders = produceOrder(
+      products,
+      batchSizes,
+      productBatchSizes,
+      batchQuantities,
+      true
+    );
+    expect(orders).toEqual(mockedOrderUseMax);
+  });
+
+  test('should return right orders when useMax is false', () => {
+    const orders = produceOrder(
+      products,
+      batchSizes,
+      productBatchSizes,
+      batchQuantities,
+      false
+    );
+    expect(orders).toEqual(mockedOrderUseMin);
+  });
 });

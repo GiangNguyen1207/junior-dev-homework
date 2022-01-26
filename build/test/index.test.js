@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var src_1 = require("../src");
-var data_1 = require("../src/data");
 var testData_1 = require("./testData");
 describe('find min and max of batch size', function () {
     test('should return the smaller batch size', function () {
@@ -39,13 +38,46 @@ describe('find min and max of batch size', function () {
         expect(returnedBatch).toEqual(undefined);
     });
 });
+describe('find number of batches', function () {
+    test('should return correct number of batchs', function () {
+        var batchQuantities = [
+            {
+                productCode: 'P1',
+                quantity: 100,
+            },
+        ];
+        var numberOfBatch = (0, src_1.findBatchQuantity)(batchQuantities, 'P1');
+        expect(numberOfBatch).toEqual(100);
+    });
+    test('should return undefined when number of batch < 0', function () {
+        var batchQuantities = [
+            {
+                productCode: 'P1',
+                quantity: -100,
+            },
+        ];
+        var numberOfBatch = (0, src_1.findBatchQuantity)(batchQuantities, 'P1');
+        expect(numberOfBatch).toEqual(undefined);
+    });
+    test('should return undefined when there is no batch found', function () {
+        var batchQuantities = [
+            {
+                productCode: 'P1',
+                quantity: 100,
+            },
+        ];
+        var numberOfBatch = (0, src_1.findBatchQuantity)(batchQuantities, 'P2');
+        expect(numberOfBatch).toEqual(undefined);
+    });
+});
 describe('create batch table', function () {
     test('create batch table with enough information', function () {
-        var returnedBatchTable = (0, src_1.createBatchTable)(data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities);
-        expect(returnedBatchTable).toEqual(testData_1.expectedBatchTable);
+        var returnedBatchTable = (0, src_1.createBatchTable)(testData_1.batchSizes, testData_1.productBatchSizes, testData_1.batchQuantities);
+        console.log(returnedBatchTable);
+        expect(returnedBatchTable).toEqual(testData_1.mockedBatchTable);
     });
     test('should skip to next round when there is batch code that can not be found in the table', function () {
-        var returnedBatchTable = (0, src_1.createBatchTable)(data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities);
+        var returnedBatchTable = (0, src_1.createBatchTable)(testData_1.batchSizes, testData_1.productBatchSizes, testData_1.batchQuantities);
         expect(returnedBatchTable['P5'].min).toEqual(expect.not.objectContaining({ code: 'BS8' }));
         expect(returnedBatchTable['P5'].max).toEqual(expect.not.objectContaining({ code: 'BS8' }));
     });
@@ -219,6 +251,68 @@ describe('create batch table', function () {
         var returnedBatchTable = (0, src_1.createBatchTable)(batchSizes, productBatchSizes, batchQuantities);
         expect(returnedBatchTable['P2'].batchQuantity).toEqual(undefined);
     });
+    test('should return undefined when the number of batch < 0', function () {
+        var productBatchSizes = [
+            {
+                productCode: 'P1',
+                batchSizeCode: 'A1',
+            },
+            {
+                productCode: 'P2',
+                batchSizeCode: 'A2',
+            },
+        ];
+        var batchSizes = [
+            {
+                code: 'A1',
+                size: 10,
+            },
+            {
+                code: 'A2',
+                size: 20,
+            },
+        ];
+        var batchQuantities = [
+            {
+                productCode: 'P1',
+                quantity: 100,
+            },
+            {
+                productCode: 'P2',
+                quantity: -200,
+            },
+        ];
+        var returnedBatchTable = (0, src_1.createBatchTable)(batchSizes, productBatchSizes, batchQuantities);
+        expect(returnedBatchTable['P1'].batchQuantity).toEqual(100);
+        expect(returnedBatchTable['P2'].batchQuantity).toEqual(undefined);
+    });
+    test('should return undefined when the batch is not in product batch sizes and the number of batch < 0 a', function () {
+        var productBatchSizes = [
+            {
+                productCode: 'P1',
+                batchSizeCode: 'A1',
+            },
+        ];
+        var batchSizes = [
+            {
+                code: 'A1',
+                size: 10,
+            },
+        ];
+        var batchQuantities = [
+            {
+                productCode: 'P1',
+                quantity: 100,
+            },
+            {
+                productCode: 'P2',
+                quantity: -200,
+            },
+        ];
+        var returnedBatchTable = (0, src_1.createBatchTable)(batchSizes, productBatchSizes, batchQuantities);
+        expect(returnedBatchTable['P1'].batchQuantity).toEqual(100);
+        expect(returnedBatchTable['P2'].batchQuantity).toEqual(undefined);
+    });
     test('should add more products to batch table', function () {
         var batchSizes = [
             {
@@ -319,5 +413,134 @@ describe('create batch table', function () {
         ];
         var returnedBatchTable = (0, src_1.createBatchTable)(batchSizes, productBatchSizes, batchQuantities);
         expect(Object.keys(returnedBatchTable)).toHaveLength(2);
+    });
+});
+describe('create orders', function () {
+    test('should take the value from column max when useMax is true', function () {
+        var orders = (0, src_1.createOrders)(testData_1.products, testData_1.mockedBatchTable, true);
+        expect(orders[1]).toHaveProperty('batchSizeCode', 'BS3');
+        expect(orders[1]).toHaveProperty('batchSize', 40);
+        expect(orders[2]).toHaveProperty('batchSizeCode', 'BS5');
+        expect(orders[2]).toHaveProperty('batchSize', 100);
+    });
+    test('should take the value from column min when useMax is false', function () {
+        var orders = (0, src_1.createOrders)(testData_1.products, testData_1.mockedBatchTable, false);
+        expect(orders[1]).toHaveProperty('batchSizeCode', 'BS1');
+        expect(orders[1]).toHaveProperty('batchSize', 20);
+        expect(orders[2]).toHaveProperty('batchSizeCode', 'BS4');
+        expect(orders[2]).toHaveProperty('batchSize', 50);
+    });
+    test('should return the default batch code/batch size when there is no batch code from batch table and useMax is true', function () {
+        var products = [
+            {
+                code: 'P1',
+                name: 'Milk',
+                price: 1.99,
+            },
+            {
+                code: 'P2',
+                name: 'Sour Milk',
+                price: 2.05,
+            },
+        ];
+        var batchTable = {
+            P1: {
+                min: {
+                    code: 'A1',
+                    size: 10,
+                },
+                max: {
+                    code: 'A2',
+                    size: 20,
+                },
+                batchQuantity: 20,
+            },
+            P2: {
+                batchQuantity: 200,
+            },
+        };
+        var orders = (0, src_1.createOrders)(products, batchTable, true);
+        expect(orders[1]).toHaveProperty('batchSizeCode', 'BS_GENERATED_P2');
+        expect(orders[1]).toHaveProperty('batchSize', 1);
+        expect(orders[0]).toHaveProperty('batchSizeCode', 'A2');
+        expect(orders[0]).toHaveProperty('batchSize', 20);
+    });
+    test('should return the default batch code/batch size when there is no batch size from batch table and useMax is false', function () {
+        var products = [
+            {
+                code: 'P1',
+                name: 'Milk',
+                price: 1.99,
+            },
+            {
+                code: 'P2',
+                name: 'Sour Milk',
+                price: 2.05,
+            },
+        ];
+        var batchTable = {
+            P1: {
+                min: {
+                    code: 'A1',
+                    size: 10,
+                },
+                max: {
+                    code: 'A2',
+                    size: 20,
+                },
+                batchQuantity: 20,
+            },
+            P2: {
+                batchQuantity: 200,
+            },
+        };
+        var orders = (0, src_1.createOrders)(products, batchTable, false);
+        expect(orders[1]).toHaveProperty('batchSizeCode', 'BS_GENERATED_P2');
+        expect(orders[1]).toHaveProperty('batchSize', 1);
+        expect(orders[0]).toHaveProperty('batchSizeCode', 'A1');
+        expect(orders[0]).toHaveProperty('batchSize', 10);
+    });
+    test('should return 1 when number of batches from batch table is undefined', function () {
+        var products = [
+            {
+                code: 'P1',
+                name: 'Milk',
+                price: 1.99,
+            },
+            {
+                code: 'P2',
+                name: 'Sour Milk',
+                price: 2.05,
+            },
+        ];
+        var batchTable = {
+            P1: {
+                min: {
+                    code: 'A1',
+                    size: 10,
+                },
+                max: {
+                    code: 'A2',
+                    size: 20,
+                },
+                batchQuantity: undefined,
+            },
+            P2: {
+                batchQuantity: 200,
+            },
+        };
+        var orders = (0, src_1.createOrders)(products, batchTable, true);
+        expect(orders.find(function (order) { return order.productCode === 'P1'; })).toHaveProperty('numberOfBatches', 1);
+        expect(orders.find(function (order) { return order.productCode === 'P2'; })).toHaveProperty('numberOfBatches', 200);
+    });
+});
+describe('produce orders', function () {
+    test('should return right orders when useMax is true', function () {
+        var orders = (0, src_1.produceOrder)(testData_1.products, testData_1.batchSizes, testData_1.productBatchSizes, testData_1.batchQuantities, true);
+        expect(orders).toEqual(testData_1.mockedOrderUseMax);
+    });
+    test('should return right orders when useMax is false', function () {
+        var orders = (0, src_1.produceOrder)(testData_1.products, testData_1.batchSizes, testData_1.productBatchSizes, testData_1.batchQuantities, false);
+        expect(orders).toEqual(testData_1.mockedOrderUseMin);
     });
 });

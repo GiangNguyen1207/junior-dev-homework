@@ -1,14 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findMinMaxBatchSize = exports.createBatchTable = void 0;
+exports.findMinMaxBatchSize = exports.findBatchQuantity = exports.createBatchTable = exports.createOrders = exports.produceOrder = void 0;
 var data_1 = require("./data");
 var produceOrder = function (products, batchSizes, productBatchSizes, batchQuantities, useMax) {
-    //1. create Batch Table
     var batchTable = (0, exports.createBatchTable)(batchSizes, productBatchSizes, batchQuantities);
-    //console.log(batchTable);
-    //2. create orders
-    return createOrders(products, batchTable, useMax);
+    return (0, exports.createOrders)(products, batchTable, useMax);
 };
+exports.produceOrder = produceOrder;
 var createOrders = function (products, batchTable, useMax) {
     var orders = [];
     products.forEach(function (product) {
@@ -31,13 +29,12 @@ var createOrders = function (products, batchTable, useMax) {
         };
         orders.push(order);
     });
-    //console.log(orders);
     return orders;
 };
+exports.createOrders = createOrders;
 var createBatchTable = function (batchSizes, productBatchSizes, batchQuantities) {
     var batchTable = {};
     productBatchSizes.forEach(function (productBatchSize) {
-        var _a;
         var productCode = productBatchSize.productCode;
         var batchFound = batchSizes.find(function (batch) { return batch.code === productBatchSize.batchSizeCode; });
         var batchInformation = {};
@@ -49,7 +46,7 @@ var createBatchTable = function (batchSizes, productBatchSizes, batchQuantities)
                 batchInformation.max = batchTable[productCode]
                     ? (0, exports.findMinMaxBatchSize)(true, batchFound, batchTable[productCode].max)
                     : batchFound;
-                batchInformation.batchQuantity = (_a = batchQuantities.find(function (quantity) { return quantity.productCode === productCode; })) === null || _a === void 0 ? void 0 : _a.quantity;
+                batchInformation.batchQuantity = (0, exports.findBatchQuantity)(batchQuantities, productCode);
             }
             else
                 return;
@@ -61,15 +58,20 @@ var createBatchTable = function (batchSizes, productBatchSizes, batchQuantities)
     var unavailableBatches = batchQuantities.filter(function (batch) { return !Object.keys(batchTable).includes(batch.productCode); });
     if (unavailableBatches.length > 0) {
         unavailableBatches.forEach(function (batch) {
-            var _a;
             batchTable[batch.productCode] = {
-                batchQuantity: (_a = batchQuantities.find(function (quantity) { return quantity.productCode === batch.productCode; })) === null || _a === void 0 ? void 0 : _a.quantity,
+                batchQuantity: (0, exports.findBatchQuantity)(batchQuantities, batch.productCode),
             };
         });
     }
     return batchTable;
 };
 exports.createBatchTable = createBatchTable;
+var findBatchQuantity = function (batchQuantities, productCode) {
+    var _a;
+    var quantity = (_a = batchQuantities.find(function (quantity) { return quantity.productCode === productCode; })) === null || _a === void 0 ? void 0 : _a.quantity;
+    return quantity && quantity > 0 ? quantity : undefined;
+};
+exports.findBatchQuantity = findBatchQuantity;
 var findMinMaxBatchSize = function (isMax, currentBatchSize, previousBatchSize) {
     switch (isMax) {
         case true:
@@ -85,4 +87,4 @@ var findMinMaxBatchSize = function (isMax, currentBatchSize, previousBatchSize) 
     }
 };
 exports.findMinMaxBatchSize = findMinMaxBatchSize;
-produceOrder(data_1.products, data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities, false);
+(0, exports.produceOrder)(data_1.products, data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities, false);

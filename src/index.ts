@@ -14,22 +14,19 @@ import {
   Order,
 } from './type';
 
-const produceOrder = (
+export const produceOrder = (
   products: Product[],
   batchSizes: BatchSize[],
   productBatchSizes: ProductBatchSize[],
   batchQuantities: BatchQuantity[],
   useMax: boolean
 ): Order[] => {
-  //1. create Batch Table
   const batchTable = createBatchTable(
     batchSizes,
     productBatchSizes,
     batchQuantities
   );
-  //console.log(batchTable);
 
-  //2. create orders
   return createOrders(products, batchTable, useMax);
 };
 
@@ -60,7 +57,7 @@ export const createOrders = (
     };
     orders.push(order);
   });
-  //console.log(orders);
+
   return orders;
 };
 
@@ -78,10 +75,6 @@ export const createBatchTable = (
     );
     let batchInformation: BatchInformation = {};
 
-    const quantity = batchQuantities.find(
-      (quantity) => quantity.productCode === productCode
-    )?.quantity;
-
     if (batchFound) {
       if (batchFound.size > 0) {
         batchInformation.min = batchTable[productCode]
@@ -90,8 +83,10 @@ export const createBatchTable = (
         batchInformation.max = batchTable[productCode]
           ? findMinMaxBatchSize(true, batchFound, batchTable[productCode].max)
           : batchFound;
-        batchInformation.batchQuantity =
-          quantity && quantity > 0 ? quantity : undefined;
+        batchInformation.batchQuantity = findBatchQuantity(
+          batchQuantities,
+          productCode
+        );
       } else return;
     } else return;
 
@@ -104,14 +99,22 @@ export const createBatchTable = (
   if (unavailableBatches.length > 0) {
     unavailableBatches.forEach((batch) => {
       batchTable[batch.productCode] = {
-        batchQuantity: batchQuantities.find(
-          (quantity) => quantity.productCode === batch.productCode
-        )?.quantity,
+        batchQuantity: findBatchQuantity(batchQuantities, batch.productCode),
       };
     });
   }
 
   return batchTable;
+};
+
+export const findBatchQuantity = (
+  batchQuantities: BatchQuantity[],
+  productCode: string
+): number | undefined => {
+  const quantity = batchQuantities.find(
+    (quantity) => quantity.productCode === productCode
+  )?.quantity;
+  return quantity && quantity > 0 ? quantity : undefined;
 };
 
 export const findMinMaxBatchSize = (
