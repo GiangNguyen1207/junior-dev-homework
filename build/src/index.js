@@ -87,4 +87,5 @@ var findMinMaxBatchSize = function (isMax, currentBatchSize, previousBatchSize) 
     }
 };
 exports.findMinMaxBatchSize = findMinMaxBatchSize;
-(0, exports.produceOrder)(data_1.products, data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities, false);
+console.log('when using max batch sizes', (0, exports.produceOrder)(data_1.products, data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities, true));
+console.log('when using min batch sizes', (0, exports.produceOrder)(data_1.products, data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities, false));

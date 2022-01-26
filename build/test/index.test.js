@@ -73,7 +73,6 @@ describe('find number of batches', function () {
 describe('create batch table', function () {
     test('create batch table with enough information', function () {
         var returnedBatchTable = (0, src_1.createBatchTable)(testData_1.batchSizes, testData_1.productBatchSizes, testData_1.batchQuantities);
-        console.log(returnedBatchTable);
         expect(returnedBatchTable).toEqual(testData_1.mockedBatchTable);
     });
     test('should skip to next round when there is batch code that can not be found in the table', function () {

@@ -138,4 +138,11 @@ export const findMinMaxBatchSize = (
   }
 };
 
-produceOrder(products, batchSizes, productBatchSizes, batchQuantities, false);
+console.log(
+  'when using max batch sizes',
+  produceOrder(products, batchSizes, productBatchSizes, batchQuantities, true)
+);
+console.log(
+  'when using min batch sizes',
+  produceOrder(products, batchSizes, productBatchSizes, batchQuantities, false)
+);
