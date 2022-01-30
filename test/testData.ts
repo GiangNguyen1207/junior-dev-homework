@@ -7,7 +7,7 @@ import {
   Order,
 } from '../src/type';
 
-export const products: Product[] = [
+export const mockedProducts: Product[] = [
   {
     code: 'P1',
     name: 'Milk',
@@ -50,7 +50,7 @@ export const products: Product[] = [
   },
 ];
 
-export const batchSizes: BatchSize[] = [
+export const mockedBatchSizes: BatchSize[] = [
   {
     code: 'BS1',
     size: 20,
@@ -93,7 +93,7 @@ export const batchSizes: BatchSize[] = [
   },
 ];
 
-export const productBatchSizes: ProductBatchSize[] = [
+export const mockedProductBatchSizes: ProductBatchSize[] = [
   {
     productCode: 'P1',
     batchSizeCode: 'BS6',
@@ -144,7 +144,7 @@ export const productBatchSizes: ProductBatchSize[] = [
   },
 ];
 
-export const batchQuantities: BatchQuantity[] = [
+export const mockedBatchQuantities: BatchQuantity[] = [
   {
     productCode: 'P1',
     quantity: 20,

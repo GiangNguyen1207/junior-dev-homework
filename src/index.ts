@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import {
   products,
   batchQuantities,
@@ -20,13 +22,14 @@ export const produceOrder = (
   productBatchSizes: ProductBatchSize[],
   batchQuantities: BatchQuantity[],
   useMax: boolean
-): Order[] => {
+): Order[] | string => {
   const batchTable = createBatchTable(
     batchSizes,
     productBatchSizes,
     batchQuantities
   );
 
+  if (_.isEmpty(batchTable)) return 'Insufficient data';
   return createOrders(products, batchTable, useMax);
 };
 
@@ -65,9 +68,15 @@ export const createBatchTable = (
   batchSizes: BatchSize[],
   productBatchSizes: ProductBatchSize[],
   batchQuantities: BatchQuantity[]
-) => {
-  const batchTable: BatchTable = {};
+): BatchTable => {
+  if (
+    _.isEmpty(batchSizes) ||
+    _.isEmpty(productBatchSizes) ||
+    _.isEmpty(batchQuantities)
+  )
+    return {};
 
+  const batchTable: BatchTable = {};
   productBatchSizes.forEach((productBatchSize) => {
     const productCode = productBatchSize.productCode;
     const batchFound = batchSizes.find(

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.mockedOrderUseMin = exports.mockedOrderUseMax = exports.mockedBatchTable = exports.batchQuantities = exports.productBatchSizes = exports.batchSizes = exports.products = void 0;
-exports.products = [
+exports.mockedOrderUseMin = exports.mockedOrderUseMax = exports.mockedBatchTable = exports.mockedBatchQuantities = exports.mockedProductBatchSizes = exports.mockedBatchSizes = exports.mockedProducts = void 0;
+exports.mockedProducts = [
     {
         code: 'P1',
         name: 'Milk',
@@ -43,7 +43,7 @@ exports.products = [
         price: 2.1,
     },
 ];
-exports.batchSizes = [
+exports.mockedBatchSizes = [
     {
         code: 'BS1',
         size: 20,
@@ -85,7 +85,7 @@ exports.batchSizes = [
         size: 50,
     },
 ];
-exports.productBatchSizes = [
+exports.mockedProductBatchSizes = [
     {
         productCode: 'P1',
         batchSizeCode: 'BS6',
@@ -135,7 +135,7 @@ exports.productBatchSizes = [
         batchSizeCode: 'BS11',
     },
 ];
-exports.batchQuantities = [
+exports.mockedBatchQuantities = [
     {
         productCode: 'P1',
         quantity: 20,

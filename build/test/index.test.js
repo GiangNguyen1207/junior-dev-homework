@@ -72,11 +72,11 @@ describe('find number of batches', function () {
 });
 describe('create batch table', function () {
     test('create batch table with enough information', function () {
-        var returnedBatchTable = (0, src_1.createBatchTable)(testData_1.batchSizes, testData_1.productBatchSizes, testData_1.batchQuantities);
+        var returnedBatchTable = (0, src_1.createBatchTable)(testData_1.mockedBatchSizes, testData_1.mockedProductBatchSizes, testData_1.mockedBatchQuantities);
         expect(returnedBatchTable).toEqual(testData_1.mockedBatchTable);
     });
     test('should skip to next round when there is batch code that can not be found in the table', function () {
-        var returnedBatchTable = (0, src_1.createBatchTable)(testData_1.batchSizes, testData_1.productBatchSizes, testData_1.batchQuantities);
+        var returnedBatchTable = (0, src_1.createBatchTable)(testData_1.mockedBatchSizes, testData_1.mockedProductBatchSizes, testData_1.mockedBatchQuantities);
         expect(returnedBatchTable['P5'].min).toEqual(expect.not.objectContaining({ code: 'BS8' }));
         expect(returnedBatchTable['P5'].max).toEqual(expect.not.objectContaining({ code: 'BS8' }));
     });
@@ -413,17 +413,29 @@ describe('create batch table', function () {
         var returnedBatchTable = (0, src_1.createBatchTable)(batchSizes, productBatchSizes, batchQuantities);
         expect(Object.keys(returnedBatchTable)).toHaveLength(2);
     });
+    test('should return {} when Batch Sizes is empty', function () {
+        var returnedBatchTable = (0, src_1.createBatchTable)([], testData_1.mockedProductBatchSizes, testData_1.mockedBatchQuantities);
+        expect(returnedBatchTable).toEqual({});
+    });
+    test('should return {} when Product Batch Sizes is empty', function () {
+        var returnedBatchTable = (0, src_1.createBatchTable)(testData_1.mockedBatchSizes, [], testData_1.mockedBatchQuantities);
+        expect(returnedBatchTable).toEqual({});
+    });
+    test('should return {} when Batch Quantities is empty', function () {
+        var returnedBatchTable = (0, src_1.createBatchTable)(testData_1.mockedBatchSizes, testData_1.mockedProductBatchSizes, []);
+        expect(returnedBatchTable).toEqual({});
+    });
 });
 describe('create orders', function () {
     test('should take the value from column max when useMax is true', function () {
-        var orders = (0, src_1.createOrders)(testData_1.products, testData_1.mockedBatchTable, true);
+        var orders = (0, src_1.createOrders)(testData_1.mockedProducts, testData_1.mockedBatchTable, true);
         expect(orders[1]).toHaveProperty('batchSizeCode', 'BS3');
         expect(orders[1]).toHaveProperty('batchSize', 40);
         expect(orders[2]).toHaveProperty('batchSizeCode', 'BS5');
         expect(orders[2]).toHaveProperty('batchSize', 100);
     });
     test('should take the value from column min when useMax is false', function () {
-        var orders = (0, src_1.createOrders)(testData_1.products, testData_1.mockedBatchTable, false);
+        var orders = (0, src_1.createOrders)(testData_1.mockedProducts, testData_1.mockedBatchTable, false);
         expect(orders[1]).toHaveProperty('batchSizeCode', 'BS1');
         expect(orders[1]).toHaveProperty('batchSize', 20);
         expect(orders[2]).toHaveProperty('batchSizeCode', 'BS4');
@@ -535,11 +547,15 @@ describe('create orders', function () {
 });
 describe('produce orders', function () {
     test('should return right orders when useMax is true', function () {
-        var orders = (0, src_1.produceOrder)(testData_1.products, testData_1.batchSizes, testData_1.productBatchSizes, testData_1.batchQuantities, true);
+        var orders = (0, src_1.produceOrder)(testData_1.mockedProducts, testData_1.mockedBatchSizes, testData_1.mockedProductBatchSizes, testData_1.mockedBatchQuantities, true);
         expect(orders).toEqual(testData_1.mockedOrderUseMax);
     });
     test('should return right orders when useMax is false', function () {
-        var orders = (0, src_1.produceOrder)(testData_1.products, testData_1.batchSizes, testData_1.productBatchSizes, testData_1.batchQuantities, false);
+        var orders = (0, src_1.produceOrder)(testData_1.mockedProducts, testData_1.mockedBatchSizes, testData_1.mockedProductBatchSizes, testData_1.mockedBatchQuantities, false);
         expect(orders).toEqual(testData_1.mockedOrderUseMin);
+    });
+    test('xyz', function () {
+        var orders = (0, src_1.produceOrder)(testData_1.mockedProducts, [], testData_1.mockedProductBatchSizes, testData_1.mockedBatchQuantities, false);
+        expect(orders).toEqual('Insufficient data');
     });
 });

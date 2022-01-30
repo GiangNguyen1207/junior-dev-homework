@@ -14,10 +14,10 @@ import {
 } from '../src/type';
 import {
   mockedBatchTable,
-  products,
-  batchSizes,
-  productBatchSizes,
-  batchQuantities,
+  mockedProducts,
+  mockedBatchSizes,
+  mockedProductBatchSizes,
+  mockedBatchQuantities,
   mockedOrderUseMax,
   mockedOrderUseMin,
 } from './testData';
@@ -107,9 +107,9 @@ describe('find number of batches', () => {
 describe('create batch table', () => {
   test('create batch table with enough information', () => {
     const returnedBatchTable = createBatchTable(
-      batchSizes,
-      productBatchSizes,
-      batchQuantities
+      mockedBatchSizes,
+      mockedProductBatchSizes,
+      mockedBatchQuantities
     );
 
     expect(returnedBatchTable).toEqual(mockedBatchTable);
@@ -117,9 +117,9 @@ describe('create batch table', () => {
 
   test('should skip to next round when there is batch code that can not be found in the table', () => {
     const returnedBatchTable = createBatchTable(
-      batchSizes,
-      productBatchSizes,
-      batchQuantities
+      mockedBatchSizes,
+      mockedProductBatchSizes,
+      mockedBatchQuantities
     );
 
     expect(returnedBatchTable['P5'].min).toEqual(
@@ -518,11 +518,38 @@ describe('create batch table', () => {
     );
     expect(Object.keys(returnedBatchTable)).toHaveLength(2);
   });
+
+  test('should return {} when Batch Sizes is empty', () => {
+    const returnedBatchTable = createBatchTable(
+      [],
+      mockedProductBatchSizes,
+      mockedBatchQuantities
+    );
+    expect(returnedBatchTable).toEqual({});
+  });
+
+  test('should return {} when Product Batch Sizes is empty', () => {
+    const returnedBatchTable = createBatchTable(
+      mockedBatchSizes,
+      [],
+      mockedBatchQuantities
+    );
+    expect(returnedBatchTable).toEqual({});
+  });
+
+  test('should return {} when Batch Quantities is empty', () => {
+    const returnedBatchTable = createBatchTable(
+      mockedBatchSizes,
+      mockedProductBatchSizes,
+      []
+    );
+    expect(returnedBatchTable).toEqual({});
+  });
 });
 
 describe('create orders', () => {
   test('should take the value from column max when useMax is true', () => {
-    const orders = createOrders(products, mockedBatchTable, true);
+    const orders = createOrders(mockedProducts, mockedBatchTable, true);
     expect(orders[1]).toHaveProperty('batchSizeCode', 'BS3');
     expect(orders[1]).toHaveProperty('batchSize', 40);
     expect(orders[2]).toHaveProperty('batchSizeCode', 'BS5');
@@ -530,7 +557,7 @@ describe('create orders', () => {
   });
 
   test('should take the value from column min when useMax is false', () => {
-    const orders = createOrders(products, mockedBatchTable, false);
+    const orders = createOrders(mockedProducts, mockedBatchTable, false);
     expect(orders[1]).toHaveProperty('batchSizeCode', 'BS1');
     expect(orders[1]).toHaveProperty('batchSize', 20);
     expect(orders[2]).toHaveProperty('batchSizeCode', 'BS4');
@@ -653,10 +680,10 @@ describe('create orders', () => {
 describe('produce orders', () => {
   test('should return right orders when useMax is true', () => {
     const orders = produceOrder(
-      products,
-      batchSizes,
-      productBatchSizes,
-      batchQuantities,
+      mockedProducts,
+      mockedBatchSizes,
+      mockedProductBatchSizes,
+      mockedBatchQuantities,
       true
     );
     expect(orders).toEqual(mockedOrderUseMax);
@@ -664,12 +691,23 @@ describe('produce orders', () => {
 
   test('should return right orders when useMax is false', () => {
     const orders = produceOrder(
-      products,
-      batchSizes,
-      productBatchSizes,
-      batchQuantities,
+      mockedProducts,
+      mockedBatchSizes,
+      mockedProductBatchSizes,
+      mockedBatchQuantities,
       false
     );
     expect(orders).toEqual(mockedOrderUseMin);
+  });
+
+  test('should return insufficent data if batch table is empty', () => {
+    const orders = produceOrder(
+      mockedProducts,
+      [],
+      mockedProductBatchSizes,
+      mockedBatchQuantities,
+      false
+    );
+    expect(orders).toEqual('Insufficient data');
   });
 });

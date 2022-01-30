@@ -1,9 +1,16 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.findMinMaxBatchSize = exports.findBatchQuantity = exports.createBatchTable = exports.createOrders = exports.produceOrder = void 0;
+var lodash_1 = __importDefault(require("lodash"));
 var data_1 = require("./data");
 var produceOrder = function (products, batchSizes, productBatchSizes, batchQuantities, useMax) {
     var batchTable = (0, exports.createBatchTable)(batchSizes, productBatchSizes, batchQuantities);
+    console.log(lodash_1.default.isEmpty(batchTable));
+    if (lodash_1.default.isEmpty(batchTable))
+        return 'Insufficient data';
     return (0, exports.createOrders)(products, batchTable, useMax);
 };
 exports.produceOrder = produceOrder;
@@ -33,6 +40,10 @@ var createOrders = function (products, batchTable, useMax) {
 };
 exports.createOrders = createOrders;
 var createBatchTable = function (batchSizes, productBatchSizes, batchQuantities) {
+    if (lodash_1.default.isEmpty(batchSizes) ||
+        lodash_1.default.isEmpty(productBatchSizes) ||
+        lodash_1.default.isEmpty(batchQuantities))
+        return {};
     var batchTable = {};
     productBatchSizes.forEach(function (productBatchSize) {
         var productCode = productBatchSize.productCode;
@@ -87,5 +98,12 @@ var findMinMaxBatchSize = function (isMax, currentBatchSize, previousBatchSize) 
     }
 };
 exports.findMinMaxBatchSize = findMinMaxBatchSize;
-console.log('when using max batch sizes', (0, exports.produceOrder)(data_1.products, data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities, true));
-console.log('when using min batch sizes', (0, exports.produceOrder)(data_1.products, data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities, false));
+// console.log(
+//   'when using max batch sizes',
+//   produceOrder(products, batchSizes, productBatchSizes, batchQuantities, true)
+// );
+// console.log(
+//   'when using min batch sizes',
+//   produceOrder(products, batchSizes, productBatchSizes, batchQuantities, false)
+// );
+(0, exports.produceOrder)(data_1.products, data_1.batchSizes, data_1.productBatchSizes, data_1.batchQuantities, true);
